@@ -8,7 +8,10 @@
 ;;
 ;;; Variables
 
-(defvar doom-upgrade-url "https://github.com/doomemacs/doomemacs"
+;; HACK (by Jamie Cui) I would like to doom emacs upgrade according to my repo, not the official 
+;;   repo.
+
+(defvar doom-upgrade-url "https://github.com/Jamie-Cui/doomemacs"
   "The git repo url for Doom Emacs.")
 
 (defvar doom-upgrade-remote "_upgrade"
