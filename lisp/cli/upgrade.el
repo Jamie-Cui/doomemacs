@@ -79,7 +79,7 @@ libraries. It is the equivalent of the following shell commands:
   (let ((default-directory doom-emacs-dir)
         process-file-side-effects)
     (print! (start "Preparing to upgrade Doom Emacs and its packages..."))
-    (print! (concat "doom-upgrade-url: " doom-upgrade-url))
+    (print! (start "doom-upgrade-url: " doom-upgrade-url))
 
     (let* (;; git name-rev may return BRANCH~X for detached HEADs and fully
            ;; qualified refs in some other cases, so an effort to strip out all
