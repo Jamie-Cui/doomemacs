@@ -22,12 +22,12 @@
 ;;; Commands
 
 (defcli! ((upgrade up))
-    ((aot?       ("--aot") "Natively compile packages ahead-of-time (if available)")
-     (packages?  ("-p" "--packages") "Only upgrade packages, not Doom")
-     (jobs       ("-j" "--jobs" num) "How many CPUs to use for native compilation")
-     (nobuild?   ("-B") "Don't rebuild packages when hostname or Emacs version has changed")
-     &context context)
-  "Updates Doom's core, module libraries, and installed packages.
+         ((aot?       ("--aot") "Natively compile packages ahead-of-time (if available)")
+          (packages?  ("-p" "--packages") "Only upgrade packages, not Doom")
+          (jobs       ("-j" "--jobs" num) "How many CPUs to use for native compilation")
+          (nobuild?   ("-B") "Don't rebuild packages when hostname or Emacs version has changed")
+          &context context)
+         "Updates Doom's core, module libraries, and installed packages.
 
 A convenience command for updating Doom's core and pinned modules/module
 libraries. It is the equivalent of the following shell commands:
@@ -35,40 +35,40 @@ libraries. It is the equivalent of the following shell commands:
     $ cd ~/.emacs.d
     $ git pull --rebase
     $ doom sync -u"
-  (let* ((force? (doom-cli-context-suppress-prompts-p context))
-         (sync-cmd (append '("sync" "-u")
-                           (if aot? '("--aot"))
-                           (if nobuild? '("-B"))
-                           (if jobs `("-j" ,jobs)))))
-    (cond
-     (packages?
-      ;; HACK It's messy to use straight to upgrade straight, due to the
-      ;;   potential for backwards incompatibility, so we staticly check if
-      ;;   Doom's `package!' declaration for straight has changed. If it has,
-      ;;   delete straight so 'doom sync' will install the new version for us.
-      ;;
-      ;;   Clumsy, but a better solution is in the works.
-      (let ((recipe (doom-cli-context-get context 'straight-recipe)))
-        (when (and recipe (not (equal recipe (doom-upgrade--get-straight-recipe))))
-          (print! (item "Preparing straight for an update"))
-          (delete-directory (doom-path straight-base-dir "straight/repos/straight.el")
-                            'recursive)))
-      (call! sync-cmd)
-      (print! (success "Finished upgrading Doom Emacs")))
+         (let* ((force? (doom-cli-context-suppress-prompts-p context))
+                (sync-cmd (append '("sync" "-u")
+                                  (if aot? '("--aot"))
+                                  (if nobuild? '("-B"))
+                                  (if jobs `("-j" ,jobs)))))
+           (cond
+            (packages?
+             ;; HACK It's messy to use straight to upgrade straight, due to the
+             ;;   potential for backwards incompatibility, so we staticly check if
+             ;;   Doom's `package!' declaration for straight has changed. If it has,
+             ;;   delete straight so 'doom sync' will install the new version for us.
+             ;;
+             ;;   Clumsy, but a better solution is in the works.
+             (let ((recipe (doom-cli-context-get context 'straight-recipe)))
+               (when (and recipe (not (equal recipe (doom-upgrade--get-straight-recipe))))
+                 (print! (item "Preparing straight for an update"))
+                 (delete-directory (doom-path straight-base-dir "straight/repos/straight.el")
+                                   'recursive)))
+             (call! sync-cmd)
+             (print! (success "Finished upgrading Doom Emacs")))
 
-     ((doom-cli-upgrade context force? force?)
-      ;; Reload Doom's CLI & libraries, in case there were any upstream changes.
-      ;; Major changes will still break, however
-      (print! (item "Reloading Doom Emacs"))
-      (doom-cli-context-put context 'upgrading t)
-      (exit! "doom" "upgrade" "-p"
-             (if aot? "--aot")
-             (if nobuild? "-B")
-             (if force? "--force")
-             (if jobs (format "--jobs=%d" jobs))))
+            ((doom-cli-upgrade context force? force?)
+             ;; Reload Doom's CLI & libraries, in case there were any upstream changes.
+             ;; Major changes will still break, however
+             (print! (item "Reloading Doom Emacs"))
+             (doom-cli-context-put context 'upgrading t)
+             (exit! "doom" "upgrade" "-p"
+                    (if aot? "--aot")
+                    (if nobuild? "-B")
+                    (if force? "--force")
+                    (if jobs (format "--jobs=%d" jobs))))
 
-     ((print! "Doom is up-to-date!")
-      (call! sync-cmd)))))
+            ((print! "Doom is up-to-date!")
+             (call! sync-cmd)))))
 
 
 ;;
@@ -79,6 +79,7 @@ libraries. It is the equivalent of the following shell commands:
   (let ((default-directory doom-emacs-dir)
         process-file-side-effects)
     (print! (start "Preparing to upgrade Doom Emacs and its packages..."))
+    (print! (concat "doom-upgrade-url: " doom-upgrade-url))
 
     (let* (;; git name-rev may return BRANCH~X for detached HEADs and fully
            ;; qualified refs in some other cases, so an effort to strip out all
@@ -147,10 +148,10 @@ libraries. It is the equivalent of the following shell commands:
                     (ignore (print! (error "Aborted")))
                   (print! (start "Upgrading Doom Emacs..."))
                   (print-group!
-                   (doom-cli-context-put context 'straight-recipe (doom-upgrade--get-straight-recipe))
-                   (or (and (zerop (car (sh! "git" "reset" "--hard" target-remote)))
-                            (equal (cdr (sh! "git" "rev-parse" "HEAD")) new-rev))
-                       (error "Failed to check out %s" (substring new-rev 0 10)))))))))
+                    (doom-cli-context-put context 'straight-recipe (doom-upgrade--get-straight-recipe))
+                    (or (and (zerop (car (sh! "git" "reset" "--hard" target-remote)))
+                             (equal (cdr (sh! "git" "rev-parse" "HEAD")) new-rev))
+                        (error "Failed to check out %s" (substring new-rev 0 10)))))))))
         (ignore-errors
           (sh! "git" "branch" "-D" target-remote)
           (sh! "git" "remote" "remove" doom-upgrade-remote))))))
