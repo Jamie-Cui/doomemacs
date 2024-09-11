@@ -107,6 +107,7 @@ libraries. It is the equivalent of the following shell commands:
           (sh! "git" "clean" "-ffd")))
 
       ;; In case of leftover state from a partial/incomplete 'doom upgrade'
+      (print! (start (concat "target-remote (branch) " target-remote)))
       (sh! "git" "branch" "-D" target-remote)
       (sh! "git" "remote" "remove" doom-upgrade-remote)
       (unwind-protect
