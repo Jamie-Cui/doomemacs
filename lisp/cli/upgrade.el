@@ -79,7 +79,7 @@ libraries. It is the equivalent of the following shell commands:
   (let ((default-directory doom-emacs-dir)
         process-file-side-effects)
     (print! (start "Preparing to upgrade Doom Emacs and its packages..."))
-    (print! (start (concat "doom-upgrade-url: " doom-upgrade-url)))
+    (print! (start (concat "Doom upgrade remote url: " doom-upgrade-url)))
 
     (let* (;; git name-rev may return BRANCH~X for detached HEADs and fully
            ;; qualified refs in some other cases, so an effort to strip out all
@@ -89,6 +89,8 @@ libraries. It is the equivalent of the following shell commands:
                     "^\\(?:[^/]+/[^/]+/\\)?\\(.+\\)\\(?:~[0-9]+\\)?$" "\\1"
                     (cdr (sh! "git" "name-rev" "--name-only" "HEAD"))))
            (target-remote (format "%s_%s" doom-upgrade-remote branch)))
+      (print! (start (concat "Doom upgrade remote branch: " (cdr (sh! "git" "name-rev" "--name-only" "HEAD")))))
+
       (unless branch
         (error (if (file-exists-p! ".git" doom-emacs-dir)
                    "Couldn't find Doom's .git directory. Was Doom cloned properly?"
@@ -107,7 +109,6 @@ libraries. It is the equivalent of the following shell commands:
           (sh! "git" "clean" "-ffd")))
 
       ;; In case of leftover state from a partial/incomplete 'doom upgrade'
-      (print! (start (concat "target-remote (branch) " target-remote)))
       (sh! "git" "branch" "-D" target-remote)
       (sh! "git" "remote" "remove" doom-upgrade-remote)
       (unwind-protect
