@@ -28,7 +28,14 @@ itself.")
 enabling unicode symbols in math regions. This requires the unicode-math LaTeX
 package to be installed.")
 
-(defvar +latex-viewers '(skim evince sumatrapdf zathura okular pdf-tools)
+;; (defvar +latex-viewers '(skim evince sumatrapdf zathura okular pdf-tools)
+;;   "A list of enabled LaTeX viewers to use, in this order. If they don't exist,
+;; they will be ignored. Recognized viewers are skim, evince, sumatrapdf, zathura,
+;; okular and pdf-tools.
+;;
+;; If no viewer is found, `latex-preview-pane-mode' is used.")
+
+(defvar +latex-viewers '(pdf-tools)
   "A list of enabled LaTeX viewers to use, in this order. If they don't exist,
 they will be ignored. Recognized viewers are skim, evince, sumatrapdf, zathura,
 okular and pdf-tools.
