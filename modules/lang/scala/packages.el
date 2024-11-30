@@ -5,5 +5,5 @@
 (package! scala-mode :pin "bd0638c32ab0f2eadacf2809329abf5388211760")
 
 (when (and (modulep! +lsp)
-           (not (modulep! :tools lsp +eglot)))
-  (package! lsp-metals :pin "0dc938be1190d147e7013e3dce08ac8bff5d1662"))
+           (modulep! :tools lsp -eglot))
+  (package! lsp-metals :pin "b5139c959336758a93d0e55458e6ca938d9fd16a"))

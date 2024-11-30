@@ -2,7 +2,7 @@
 
 (defvar +mu4e-backend 'mbsync
   "Which backend to use. Can either be offlineimap, mbsync or nil (manual).")
-(make-obsolete-variable '+mu4e-backend "Use the :email mu4e module's +mbsync or +offlineimap flags instead" "3.0.0")
+(make-obsolete-variable '+mu4e-backend "Use the :email mu4e module's +mbsync or +offlineimap flags instead" "24.09")
 
 (defvar +mu4e-personal-addresses 'nil
   "Alternative to mu4e-personal-addresses that can be set for each account (mu4e context).")
@@ -24,6 +24,11 @@
   (add-to-list 'doom-debug-variables 'mu4e-debug)
   ;; mu4e now uses `display-buffer-alist' so we need to add some rules of our own
   (set-popup-rule! "^\\*mu4e-\\(main\\|headers\\)\\*" :ignore t)
+  (set-popup-rule! "^\\*mu4e-log\\*" :select nil)
+
+  ;; Treat mu4e main menu buffer as real, so it can be switched to or fallen
+  ;; back to when killing other buffers.
+  (add-hook 'mu4e-main-mode-hook #'doom-mark-buffer-as-real-h)
 
   ;; Ensures backward/forward compatibility for mu4e, which is prone to breaking
   ;; updates, and also cannot be pinned, because it's bundled with mu (which you
@@ -436,21 +441,18 @@ This should already be the case yet it does not always seem to be."
     (let ((files (org-msg-get-prop "attachment")))
       (org-msg-set-prop "attachment" (nconc files (list file)))))
 
-  (defvar +mu4e-compose-org-msg-toggle-next t ; t to initialise org-msg
-    "Whether to toggle `org-msg-toggle' on ")
-  (defun +mu4e-compose-org-msg-handle-toggle (toggle-p)
-    (when (xor toggle-p +mu4e-compose-org-msg-toggle-next)
-      (org-msg-mode (if org-msg-mode -1 1))
-      (setq +mu4e-compose-org-msg-toggle-next
-            (not +mu4e-compose-org-msg-toggle-next))))
-
-  ;; HACK: ...
+  ;; HACK: Toggle `org-msg' where sensible.
+  (defvar +mu4e-compose-org-msg-toggle-next t)
   (defadvice! +mu4e-maybe-toggle-org-msg-a (&rest _)
+    :before #'+mu4e/attach-files
     :before #'mu4e-compose-new
     :before #'mu4e-compose-reply
     :before #'mu4e-compose-forward
     :before #'mu4e-compose-resend
-    (+mu4e-compose-org-msg-handle-toggle (/= 1 (or current-prefix-arg 0))))
+    (when (xor (/= 1 (prefix-numeric-value current-prefix-arg))
+               +mu4e-compose-org-msg-toggle-next)
+      (org-msg-mode (if org-msg-mode -1 1))
+      (cl-callf not +mu4e-compose-org-msg-toggle-next)))
 
   ;; HACK: ...
   (defadvice! +mu4e-draft-open-signature-a (fn &rest args)

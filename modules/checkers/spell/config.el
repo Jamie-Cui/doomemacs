@@ -62,13 +62,15 @@
 
     (_ (doom-log "Spell checker not found. Either install `aspell', `hunspell' or `enchant'")))
 
-  (ispell-check-version))
+  (if (executable-find ispell-program-name)
+      (ispell-check-version)
+    (warn "Can't find %s in your $PATH" ispell-program-name)))
 
 
 ;;
 ;;; Implementations
 
-(eval-if! (not (modulep! +flyspell))
+(eval-if! (modulep! -flyspell)
 
     (use-package! spell-fu
       :when (executable-find "aspell")

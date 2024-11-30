@@ -344,10 +344,10 @@ without needing to check if they are available."
 
 (defun doom--help-modules-list ()
   (cl-loop for (cat . mod) in (doom-module-list 'all)
-           for readme-path = (or (doom-module-locate-path cat mod "README.org")
-                                 (doom-module-locate-path cat mod))
+           for readme-path = (or (doom-module-locate-path (cons cat mod) "README.org")
+                                 (doom-module-locate-path (cons cat mod)))
            for format = (if mod (format "%s %s" cat mod) (format "%s" cat))
-           if (doom-module-p cat mod)
+           if (doom-module-active-p cat mod)
            collect (list format readme-path)
            else if (and cat mod)
            collect (list (propertize format 'face 'font-lock-comment-face)
@@ -365,7 +365,7 @@ without needing to check if they are available."
                  (format "%s %s" (nth 1 sexp) (nth 2 sexp)))))))
         ((when buffer-file-name
            (when-let (mod (doom-module-from-path buffer-file-name))
-             (unless (memq (car mod) '(:core :user))
+             (unless (memq (car mod) '(:doom :user))
                (format "%s %s" (car mod) (cdr mod))))))
         ((when-let (mod (cdr (assq major-mode doom--help-major-mode-module-alist)))
            (format "%s %s"
@@ -533,7 +533,6 @@ If prefix arg is present, refresh the cache."
                           packages nil t nil nil
                           (when guess (symbol-name guess))))))))
   ;; TODO Refactor me.
-  (require 'doom-packages)
   (doom-initialize-packages)
   (help-setup-xref (list #'doom/help-packages package)
                    (called-interactively-p 'interactive))
@@ -627,11 +626,10 @@ If prefix arg is present, refresh the cache."
           (insert "Declared by the following Doom modules:\n")
           (dolist (m modules)
             (let* ((module-path (pcase (car m)
-                                  (:core doom-core-dir)
+                                  (:doom doom-core-dir)
                                   (:user doom-user-dir)
                                   (category
-                                   (doom-module-locate-path category
-                                                            (cdr m)))))
+                                   (doom-module-locate-path (cons category (cdr m))))))
                    (readme-path (expand-file-name "README.org" module-path)))
               (insert indent)
               (doom--help-insert-button
@@ -755,3 +753,6 @@ Uses the symbol at point or the current selection, if available."
                                    (format "%s.el" filebase)))
             collect it)
    query "Search loaded files: "))
+
+(provide 'doom-lib '(help))
+;;; help.el ends here

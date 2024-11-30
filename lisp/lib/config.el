@@ -13,7 +13,7 @@
   "Browse your `doom-user-dir'."
   (interactive)
   (unless (file-directory-p doom-user-dir)
-    (make-directory doom-user-dir t))
+    (user-error "$DOOMDIR doesn't exist (%s)" (abbreviate-file-name doom-user-dir)))
   (doom-project-browse doom-user-dir))
 
 ;;;###autoload
@@ -22,46 +22,30 @@
   (interactive)
   (doom-project-find-file doom-user-dir))
 
-;;;###autoload
-(defun doom/goto-private-init-file ()
-  "Open your private init.el file.
-And jumps to your `doom!' block."
-  (interactive)
-  (find-file (expand-file-name doom-module-init-file doom-user-dir))
-  (goto-char
-   (or (save-excursion
-         (goto-char (point-min))
-         (search-forward "(doom!" nil t))
-       (point))))
-
-;;;###autoload
-(defun doom/goto-private-config-file ()
-  "Open your private config.el file."
-  (interactive)
-  (find-file (expand-file-name doom-module-config-file doom-user-dir)))
-
-;;;###autoload
-(defun doom/goto-private-packages-file ()
-  "Open your private packages.el file."
-  (interactive)
-  (find-file (expand-file-name doom-module-packages-file doom-user-dir)))
-
 
 ;;
 ;;; Managements
 
 (defmacro doom--if-compile (command on-success &optional on-failure)
   (declare (indent 2))
-  `(let ((default-directory doom-emacs-dir)
-         (doom-bin (expand-file-name "doom" doom-bin-dir)))
+  `(let ((doom-bin "doom")
+         (default-directory doom-emacs-dir)
+         (exec-path (cons doom-bin-dir exec-path)))
+     (when (and (featurep :system 'windows)
+                (string-match-p "cmdproxy.exe$" shell-file-name))
+       (unless (executable-find "pwsh")
+         (user-error "Powershell 3.0+ is required, but pwsh.exe was not found in your $PATH"))
+       (setq doom-bin "doom.ps1"))
      ;; Ensure the bin/doom operates with the same environment as this
      ;; running session.
-     (letenv! (("EMACS" (doom-path invocation-directory invocation-name))
+     (letenv! (("PATH" (string-join exec-path path-separator))
+               ("EMACS" (doom-path invocation-directory invocation-name))
                ("EMACSDIR" doom-emacs-dir)
                ("DOOMDIR" doom-user-dir)
                ("DOOMLOCALDIR" doom-local-dir)
-               ("DEBUG" (and doom-debug-mode "1")))
-       (with-current-buffer (compile (format ,command doom-bin) t)
+               ("DEBUG" (if doom-debug-mode (number-to-string doom-log-level) "")))
+       (with-current-buffer
+           (compile (format ,command (expand-file-name doom-bin doom-bin-dir)) t)
          (let ((w (get-buffer-window (current-buffer))))
            (select-window w)
            (add-hook
@@ -96,9 +80,8 @@ Runs `doom-after-reload-hook' afterwards."
   (interactive)
   (mapc #'require (cdr doom-incremental-packages))
   (doom--if-compile doom-reload-command
-      (doom-context-with '(reload modules)
+      (with-doom-context 'reload
         (doom-run-hooks 'doom-before-reload-hook)
-        (doom-load (file-name-concat doom-user-dir doom-module-init-file) t)
         (with-demoted-errors "PRIVATE CONFIG ERROR: %s"
           (general-auto-unbind-keys)
           (unwind-protect
@@ -119,9 +102,9 @@ remove orphaned ones. It also doesn't reload your private config.
 It is useful to only pull in changes performed by 'doom sync' on the command
 line."
   (interactive)
-  (require 'doom-profiles)
+  (doom-require 'doom-lib 'profiles)
   ;; TODO: Make this more robust
-  (doom-context-with 'reload
+  (with-doom-context 'reload
     (dolist (file (mapcar #'car doom-profile-generators))
       (when (string-match-p "/[0-9]+-loaddefs[.-]" file)
         (load (doom-path doom-profile-dir doom-profile-init-dir-name file)
@@ -137,7 +120,7 @@ Doing so from within Emacs will taint your shell environment.
 An envvar file contains a snapshot of your shell environment, which can be
 imported into Emacs."
   (interactive)
-  (doom-context-with 'reload
+  (with-doom-context 'reload
     (let ((default-directory doom-emacs-dir))
       (with-temp-buffer
         (doom-load-envvars-file doom-env-file)
@@ -157,3 +140,6 @@ imported into Emacs."
   (doom--if-compile doom-upgrade-command
       (when (y-or-n-p "You must restart Emacs for the upgrade to take effect.\n\nRestart Emacs?")
         (doom/restart-and-restore))))
+
+(provide 'doom-lib '(config))
+;;; config.el ends here

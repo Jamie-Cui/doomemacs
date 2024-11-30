@@ -49,7 +49,8 @@
                '(((memq (bound-and-true-p yas--active-field-overlay)
                         (overlays-in (1- (point)) (1+ (point))))
                   #'yas-next-field-or-maybe-expand)
-                 ((yas-maybe-expand-abbrev-key-filter 'yas-expand)
+                 ((and (bound-and-true-p yas-minor-mode)
+                       (yas-maybe-expand-abbrev-key-filter 'yas-expand))
                   #'yas-expand)))
            ,@(when (modulep! :completion company +tng)
                '(((bound-and-true-p company-mode)
@@ -439,7 +440,7 @@
 
       ;;; <leader> c --- code
       (:prefix-map ("c" . "code")
-       (:when (and (modulep! :tools lsp) (not (modulep! :tools lsp +eglot)))
+       (:when (modulep! :tools lsp -eglot)
         :desc "LSP Execute code action"              "a"   #'lsp-execute-code-action
         :desc "LSP Organize imports"                 "o"   #'lsp-organize-imports
         :desc "LSP"                                  "l"   #'+default/lsp-command-map
@@ -511,8 +512,8 @@
        :desc "Copy link to homepage"       "Y"   #'+vc/browse-at-remote-kill-homepage
        :desc "Git time machine"            "t"   #'git-timemachine-toggle
        (:when (modulep! :ui vc-gutter)
-        :desc "Revert hunk at point"      "r"   #'+vc-gutter/revert-hunk
-        :desc "stage hunk at point"       "s"   #'+vc-gutter/stage-hunk
+        :desc "Revert hunk at point"      "r"   #'+vc-gutter/save-and-revert-hunk
+        :desc "Stage hunk at point"       "s"   #'+vc-gutter/stage-hunk
         :desc "Jump to next hunk"         "]"   #'+vc-gutter/next-hunk
         :desc "Jump to previous hunk"     "["   #'+vc-gutter/previous-hunk)
        (:when (modulep! :tools magit)
@@ -841,8 +842,7 @@
        :desc "Fill Column Indicator"        "c" #'global-display-fill-column-indicator-mode
        :desc "Diff Highlights (Git Gutter)" "d" #'diff-hl-mode
        :desc "Flymake"                      "f" #'flymake-mode
-       (:when (and (modulep! :checkers syntax)
-                   (not (modulep! :checkers syntax +flymake)))
+       (:when (modulep! :checkers syntax -flymake)
         :desc "Flycheck"                   "f" #'flycheck-mode)
        :desc "Frame fullscreen"             "F" #'toggle-frame-fullscreen
        :desc "Evil goggles"                 "g" #'evil-goggles-mode
@@ -855,7 +855,7 @@
        (:when (modulep! :lang org +present)
         :desc "org-tree-slide mode"        "p" #'org-tree-slide-mode)
        :desc "Read-only mode"               "r" #'read-only-mode
-       (:when (and (modulep! :checkers spell) (not (modulep! :checkers spell +flyspell)))
+       (:when (modulep! :checkers spell -flyspell)
         :desc "Spell checker"              "s" #'spell-fu-mode)
        (:when (modulep! :checkers spell +flyspell)
         :desc "Spell checker"              "s" #'flyspell-mode)

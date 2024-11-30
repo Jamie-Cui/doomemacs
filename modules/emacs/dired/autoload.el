@@ -15,13 +15,14 @@
        (dired-git-info-mode 1)))
 
 ;;;###autoload
-(defun +dired/dirvish-side-or-follow (&optional arg)
+(defun +dired/dirvish-side-and-follow (&optional arg)
   "Open `dirvish-side' then find the currently focused file.
 
 If dirvish is already open, remotely jump to the file in Dirvish.
 If given the prefix ARG, then prompt for a directory (replaces existing Dirvish
 sidebars)."
   (interactive "P")
+  (require 'dirvish-side)
   (save-selected-window
     (let ((win (dirvish-side--session-visible-p)))
       (when (and win arg)
